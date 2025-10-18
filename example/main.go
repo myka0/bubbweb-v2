@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textarea"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/tmc/bubbweb"
+	"github.com/charmbracelet/bubbles/v2/help"
+	"github.com/charmbracelet/bubbles/v2/key"
+	"github.com/charmbracelet/bubbles/v2/textarea"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/myka0/bubbweb-v2"
 )
 
 const (
@@ -22,17 +22,17 @@ const (
 
 var (
 	// Define adaptive colors for light/dark mode support
-	cursorColor               = lipgloss.AdaptiveColor{Light: "#d787ff", Dark: "#d787ff"} // Purple
-	cursorLineBackgroundColor = lipgloss.AdaptiveColor{Light: "#5f87ff", Dark: "#5f5f87"} // Blue/Dark Blue
-	cursorLineForegroundColor = lipgloss.AdaptiveColor{Light: "#000000", Dark: "#e4e4e4"} // Black/White
-	placeholderColor          = lipgloss.AdaptiveColor{Light: "#808080", Dark: "#a8a8a8"} // Gray - increased contrast for dark mode
-	endOfBufferColor          = lipgloss.AdaptiveColor{Light: "#bcbcbc", Dark: "#3a3a3a"} // Light Gray/Dark Gray
-	focusedPlaceholderColor   = lipgloss.AdaptiveColor{Light: "#8787ff", Dark: "#afbfff"} // Blue - brighter in dark mode
-	borderColor               = lipgloss.AdaptiveColor{Light: "#a8a8a8", Dark: "#787878"} // Medium Gray - increased contrast
+	cursorColor               = lipgloss.Color("#d787ff") // Purple
+	cursorLineBackgroundColor = lipgloss.Color("#5f5f87") // Blue/Dark Blue
+	cursorLineForegroundColor = lipgloss.Color("#e4e4e4") // Black/White
+	placeholderColor          = lipgloss.Color("#a8a8a8") // Gray - increased contrast for dark mode
+	endOfBufferColor          = lipgloss.Color("#3a3a3a") // Light Gray/Dark Gray
+	focusedPlaceholderColor   = lipgloss.Color("#afbfff") // Blue - brighter in dark mode
+	borderColor               = lipgloss.Color("#787878") // Medium Gray - increased contrast
 
 	// Hover effect colors
-	hoveredLineBackgroundColor = lipgloss.AdaptiveColor{Light: "#e0e8ff", Dark: "#2d2d5f"} // Light blue / Dark blue-purple
-	hoveredCharColor           = lipgloss.AdaptiveColor{Light: "#0000ff", Dark: "#8888ff"} // Blue for hovered character
+	hoveredLineBackgroundColor = lipgloss.Color("#2d2d5f") // Light blue / Dark blue-purple
+	hoveredCharColor           = lipgloss.Color("#8888ff") // Blue for hovered character
 
 	// Apply the adaptive colors to styles
 	cursorStyle = lipgloss.NewStyle().Foreground(cursorColor)
@@ -76,14 +76,14 @@ func newTextarea() textarea.Model {
 	t.Prompt = ""
 	t.Placeholder = "Type something!"
 	t.ShowLineNumbers = true
-	t.Cursor.Style = cursorStyle
-	t.FocusedStyle.Placeholder = focusedPlaceholderStyle
-	t.BlurredStyle.Placeholder = placeholderStyle
-	t.FocusedStyle.CursorLine = cursorLineStyle
-	t.FocusedStyle.Base = focusedBorderStyle
-	t.BlurredStyle.Base = blurredBorderStyle
-	t.FocusedStyle.EndOfBuffer = endOfBufferStyle
-	t.BlurredStyle.EndOfBuffer = endOfBufferStyle
+	// t.Cursor.Style = cursorStyle
+	// t.FocusedStyle.Placeholder = focusedPlaceholderStyle
+	// t.BlurredStyle.Placeholder = placeholderStyle
+	// t.FocusedStyle.CursorLine = cursorLineStyle
+	// t.FocusedStyle.Base = focusedBorderStyle
+	// t.BlurredStyle.Base = blurredBorderStyle
+	// t.FocusedStyle.EndOfBuffer = endOfBufferStyle
+	// t.BlurredStyle.EndOfBuffer = endOfBufferStyle
 	t.KeyMap.DeleteWordBackward.SetEnabled(false)
 	t.KeyMap.LineNext = key.NewBinding(key.WithKeys("down"))
 	t.KeyMap.LinePrevious = key.NewBinding(key.WithKeys("up"))
@@ -191,13 +191,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.width = msg.Width
 	case tea.MouseMsg:
-		m.mousePosition = fmt.Sprintf("(%d,%d)", msg.X, msg.Y)
+		m.mousePosition = fmt.Sprintf("(%d,%d)", msg.Mouse().X, msg.Mouse().Y)
 		m.mouseEvent = fmt.Sprint(msg)
 
 		// Track hover state for highlighting
 		if len(m.inputs) > 0 {
 			editorWidth := m.width / len(m.inputs)
-			hoveredEditor := msg.X / editorWidth
+			hoveredEditor := msg.Mouse().X / editorWidth
 
 			// Reset hover state first
 			m.hoveredEditor = -1
@@ -209,7 +209,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.hoveredEditor = hoveredEditor
 
 				// Get relative position within the editor
-				relativeX := msg.X % editorWidth
+				relativeX := msg.Mouse().X % editorWidth
 
 				// Get the editor content
 				ta := m.inputs[hoveredEditor]
@@ -225,7 +225,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					borderOffset := 1 // The top border of the textarea
 
 					// Calculate which line is hovered, accounting for offsets
-					hoveredLine := msg.Y - (topBarOffset + borderOffset) + info.RowOffset
+					hoveredLine := msg.Mouse().Y - (topBarOffset + borderOffset) + info.RowOffset
 
 					// Bounds checking for line
 					if hoveredLine >= 0 && hoveredLine < len(rows) {
@@ -249,11 +249,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		// Handle mouse clicks to change focus and set cursor position
-		if msg.Action == tea.MouseActionPress && msg.Button == tea.MouseButtonLeft {
+		if msg.Mouse().Button == tea.MouseLeft {
 			// Determine which editor was clicked based on X position
 			if len(m.inputs) > 0 {
 				editorWidth := m.width / len(m.inputs)
-				clickedEditor := msg.X / editorWidth
+				clickedEditor := msg.Mouse().X / editorWidth
 
 				// Only change focus if clicking on a different editor
 				if clickedEditor < len(m.inputs) && clickedEditor != m.focus {
@@ -265,7 +265,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				// Calculate the relative position within the editor
-				relativeX := msg.X % editorWidth
+				relativeX := msg.Mouse().X % editorWidth
 
 				// Handle cursor positioning based on click
 				ta := m.inputs[m.focus]
@@ -281,7 +281,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					borderOffset := 1 // The top border of the textarea
 
 					// Consider scrolling and UI offsets
-					clickedLine := msg.Y - (topBarOffset + borderOffset) + info.RowOffset
+					clickedLine := msg.Mouse().Y - (topBarOffset + borderOffset) + info.RowOffset
 
 					// Bounds checking
 					if clickedLine >= len(rows) {
@@ -314,7 +314,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 
 					cursorPos += charPos
-					ta.SetCursor(cursorPos)
+					ta.SetCursorColumn(cursorPos)
 				}
 			}
 		}
@@ -452,8 +452,8 @@ func (m model) View() string {
 	// Create a top bar if we have a valid width
 	if m.width > 0 {
 		// Add top bar with title using adaptive colors
-		titleBarBgColor := lipgloss.AdaptiveColor{Light: "#5f5fd7", Dark: "#5f5f87"} // Purple/Dark Blue
-		titleBarFgColor := lipgloss.AdaptiveColor{Light: "#ffffff", Dark: "#e4e4e4"} // White
+		titleBarBgColor := lipgloss.Color("#5f5f87") // Purple/Dark Blue
+		titleBarFgColor := lipgloss.Color("#e4e4e4") // White
 
 		// Create a title bar that spans the full width with centered text
 		titleBar := lipgloss.NewStyle().
@@ -497,9 +497,9 @@ func (m model) View() string {
 	// Create a mouse information status line
 	mouseInfo := ""
 	// Define adaptive colors for the mouse status display
-	mouseHeaderColor := lipgloss.AdaptiveColor{Light: "#5fafaf", Dark: "#5f8787"}     // Teal
-	mouseTextColor := lipgloss.AdaptiveColor{Light: "#5fafaf", Dark: "#5f8787"}       // Teal
-	mouseBackgroundColor := lipgloss.AdaptiveColor{Light: "#f0f0f0", Dark: "#303030"} // Light/Dark gray
+	mouseHeaderColor := lipgloss.Color("#5f8787")     // Teal
+	mouseTextColor := lipgloss.Color("#5f8787")       // Teal
+	mouseBackgroundColor := lipgloss.Color("#303030") // Light/Dark gray
 
 	mouseStyle := lipgloss.NewStyle().
 		Foreground(mouseHeaderColor).

@@ -25,7 +25,7 @@ Check out the [live demo](https://tmc.github.io/bubbweb/example/) to see BubbWeb
 
 ```go
 import (
-    tea "github.com/charmbracelet/bubbletea"
+    tea "github.com/charmbracelet/bubbletea/v2"
     "github.com/tmc/bubbweb"
 )
 

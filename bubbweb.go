@@ -9,7 +9,7 @@ import (
 	"syscall/js"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
 // MinReadBuffer is a custom buffer for handling bubbletea's input expectations in WASM

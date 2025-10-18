@@ -7,8 +7,8 @@
 // Basic usage:
 //
 //	import (
-//		tea "github.com/charmbracelet/bubbletea"
-//		"github.com/tmc/bubbweb"
+//		tea "github.com/charmbracelet/bubbletea/v2"
+//		"github.com/myka0/bubbweb-v2"
 //	)
 //
 //	func main() {
