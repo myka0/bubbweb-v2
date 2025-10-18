@@ -12,6 +12,13 @@ import (
 	tea "github.com/charmbracelet/bubbletea/v2"
 )
 
+const (
+	press = iota
+	release
+	motion
+	wheel
+)
+
 // MinReadBuffer is a custom buffer for handling bubbletea's input expectations in WASM
 type MinReadBuffer struct {
 	buf *bytes.Buffer
@@ -74,7 +81,7 @@ func NewProgram(model tea.Model, options ...tea.ProgramOption) *tea.Program {
 			return nil
 		}
 
-		eventType := tea.MouseAction(args[0].Int())
+		eventType := args[0].Int()
 		button := tea.MouseButton(args[1].Int())
 		x := args[2].Int()
 		y := args[3].Int()
@@ -82,23 +89,29 @@ func NewProgram(model tea.Model, options ...tea.ProgramOption) *tea.Program {
 		ctrl := args[5].Bool()
 		shift := args[6].Bool()
 
-		if len(args) > 5 {
-			ctrl = args[5].Bool()
+		var mod tea.KeyMod
+		if alt {
+			mod |= tea.ModAlt
 		}
-		if len(args) > 6 {
-			shift = args[6].Bool()
+		if ctrl {
+			mod |= tea.ModCtrl
+		}
+		if shift {
+			mod |= tea.ModShift
 		}
 
-		msg := tea.MouseMsg{
-			Action: eventType,
-			Button: button,
-			X:      x,
-			Y:      y,
-			Alt:    alt,
-			Ctrl:   ctrl,
-			Shift:  shift,
+		m := tea.Mouse{X: x, Y: y, Button: button, Mod: mod}
+
+		switch eventType {
+		case press:
+			prog.Send(tea.MouseClickMsg(m))
+		case release:
+			prog.Send(tea.MouseReleaseMsg(m))
+		case motion:
+			prog.Send(tea.MouseMotionMsg(m))
+		case wheel:
+			prog.Send(tea.MouseWheelMsg(m))
 		}
-		prog.Send(msg)
 
 		return nil
 	}))

@@ -76,14 +76,18 @@ func newTextarea() textarea.Model {
 	t.Prompt = ""
 	t.Placeholder = "Type something!"
 	t.ShowLineNumbers = true
-	// t.Cursor.Style = cursorStyle
-	// t.FocusedStyle.Placeholder = focusedPlaceholderStyle
-	// t.BlurredStyle.Placeholder = placeholderStyle
-	// t.FocusedStyle.CursorLine = cursorLineStyle
-	// t.FocusedStyle.Base = focusedBorderStyle
-	// t.BlurredStyle.Base = blurredBorderStyle
-	// t.FocusedStyle.EndOfBuffer = endOfBufferStyle
-	// t.BlurredStyle.EndOfBuffer = endOfBufferStyle
+
+	s := textarea.DefaultStyles(true)
+	s.Cursor.Color = cursorColor
+	s.Focused.Placeholder = focusedPlaceholderStyle
+	s.Blurred.Placeholder = placeholderStyle
+	s.Focused.CursorLine = cursorLineStyle
+	s.Focused.Base = focusedBorderStyle
+	s.Blurred.Base = blurredBorderStyle
+	s.Focused.EndOfBuffer = endOfBufferStyle
+	s.Blurred.EndOfBuffer = endOfBufferStyle
+	t.Styles = s
+
 	t.KeyMap.DeleteWordBackward.SetEnabled(false)
 	t.KeyMap.LineNext = key.NewBinding(key.WithKeys("down"))
 	t.KeyMap.LinePrevious = key.NewBinding(key.WithKeys("up"))
